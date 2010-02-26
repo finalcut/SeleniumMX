@@ -19,7 +19,7 @@ my app was restored to its proper state when all was said and done.   SeleniumMX
 First off you need to understand the convention.  I expect all of your ui tests to be in a nice clean directory structure.  I strongly recommend adding a uitests
 directory to your project and then putting your selenium tests in directories beneath that uitests directory.  Just don't put any tests in the uitests directory.
 
-=head3 Directory Structure Example:
+=head2 Directory Structure Example:
         myproject
                 uitests
                         module1
@@ -37,7 +37,7 @@ Next you'll need to edit the _seleniumMXSettings.cfm file.  That document is pre
 
 Finally, within each directory that you want to provide some setup or teardown (cleanup) logic for a ui test you will need to add a setup.cfc and a teardown.cfc.  Please refer to the example application in the source when you do this the first time.  Both setup.cfc and teardown.cfc must extend the seleniumMxBase.cfc that is in your uitests directory.
 
-=head3 setup.cfc
+=head2 setup.cfc
 The setup.cfc must have a public method called testUIsetup that takes in no arguments.  The teardown.cfc must have a public method called testUIteardown that also takes in no arguments.  For each test setup method you create and reference in your testUISetup method there must be a matching teardown function in the teardown.cfc and they must follow the naming convention of teardown{setuptestname}  where {setuptestname} is the name of the test function in the setup.cfc that your teardown function is cleaning up.  If this seems confusing please refer to the exampleProject.
 
 Each setup function must return a struct and each teardown function must accept the struct that the setup function returns.  This way your setup can tell your teardown what ids or other values it needs for cleaning up when all the tests are run.
