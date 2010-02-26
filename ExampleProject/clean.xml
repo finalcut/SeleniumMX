@@ -1,0 +1,14 @@
+<project name="Listbuilder USAF" default="updateBuildFromSvn" basedir=".">
+	
+
+	<typedef resource="org/tigris/subversion/svnant/svnantlib.xml"  />
+	<target name="updateBuildFromSvn">
+		<svn>
+		  <update dir="${siteBaseDir}" recurse="true" file="build.xml;base_build.xml;ci_build.xml" />
+		</svn>
+	</target>
+
+
+
+
+</project>

@@ -1,0 +1,23 @@
+<project name="wcs" default="runAllTests" basedir=".">
+		
+	<import file="base_build.xml" />
+	<import file="user_build.xml" />
+
+	<property name="uitests.srcdir" value="${basedir}/uitests/" />
+	<property name="uitests.resultsdir" value="${basedir}/testresults/ui/" />
+	<!-- PROPERTY DEFINITIONS -->
+	<property name="siteBaseDir" value="${basedir}" />
+	<property name="alltests.showResults" value="false" />
+
+	<!--- TEST SUITES -->
+	<!--- mxunit test suite runners go here --->
+
+	<!-- UI TESTS -->
+	<target name="runAlllUITests">
+		<antcall target="AllUITests" />
+	</target>
+
+	<!--- specific ui test suites can go here --->
+
+
+</project>

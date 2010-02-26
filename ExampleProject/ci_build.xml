@@ -1,0 +1,30 @@
+<project name="exampleProject" default="runAlllUITests" basedir=".">
+	
+	
+	<import file="base_build.xml" />
+
+
+	<!-- PROPERTY DEFINITIONS -->
+	<property name="host" value="my.testserver.com" />
+	<property name="siteBaseDir" value="c:\inetpub\wwwroot\exampleProject" />
+
+
+	<property name="uitests.srcdir" value="$(siteBaseDir)\uitests" />
+	<property name="uitests.testdir" value="c:\inetpub\wwwroot\selenium-server\tests" />
+	<property name="uitests.resultsdir" value="${basedir}/testresults/ui/" />
+	<property name="uitests.server" value="${host}" />
+	<property name="uitests.browser" value="*firefox" />
+
+	<property name="alltests.showResults" value="false" />
+
+	<!--- TEST SUITES -->
+	<!--- mxunit test suite runners go here --->
+
+	<!-- UI TESTS -->
+	<target name="runAlllUITests">
+		<antcall target="AllUITests" />
+	</target>
+
+	<!--- specific ui test suites can go here --->
+
+</project>

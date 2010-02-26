@@ -1,0 +1,380 @@
+<project name="baseBuildFile">
+	
+	
+	<taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" />
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	<taskdef resource="selenium-ant.properties">
+		<classpath>
+			<pathelement location="selenium-server.jar"/>
+		</classpath>
+	</taskdef>
+
+	<property name="mxunit.error" value="false" />
+	<property name="mxunit.fail"  value="false" />
+	<typedef resource="org/tigris/subversion/svnant/svnantlib.xml"  />
+
+	<property name="alltests.showResults" value="" />
+
+	<!-- PROPERTY DEFINITIONS -->
+	<property name="junit.out.dir" value="${basedir}/testresults" />
+    <property name="junit.out.dir.html" value="${basedir}/testresults/html" />
+    <property name="output.dir" value="${basedir}/testresults/tmp" />
+	<property name="style.dir" value="styles/ant/xsl" />
+
+	<property name="svn.username" value="cruiseControl" />
+	<property name="svn.password" value="crui$3c0ntr0l" />
+
+
+	<!-- SVN INTEGRATION -->
+	<target name="updateSource"><!-- if svnant wont work.. try this -->
+		<exec executable="C:\Program Files\TortoiseSVN\bin\TortoiseProc.exe">
+			<arg value="/command:update" />
+			<arg value="/closeonend:3" /> <!-- force the dialog to close -->
+		</exec>
+	</target>
+
+	<target name="svnAntUpdate">
+		<svn username="${svn.username}" password="${svn.password}">
+		  <update dir="${siteBaseDir}" recurse="true" />
+		</svn>
+	</target>
+
+	<target name="replaceBuildFile">
+		<svn>
+		  <update dir="${siteBaseDir}" recurse="true" file="build.xml;base_build.xml;ci_build.xml" />
+		</svn>
+	</target>
+
+
+	<!-- TEST WRAPPERS -->
+	<target name="testWithoutReport" depends="testWithReport">
+		<if>
+			<equals arg1="${mxunit.error}" arg2="true" />
+				<then>
+					<antcall target="junitreport" />
+				</then>
+			<elseif>
+			<equals arg1="${mxunit.fail}" arg2="true" />
+				<then>
+					<antcall target="junitreport" />
+				</then>
+			</elseif>
+		</if>
+		<antcall target="testCleanup" />
+	</target>
+
+	<target name="testWithReport" depends="runFullTestSuite">
+		<antcall target="displayResultsIfProblems" />
+		<antcall target="testCleanup" />
+	</target>
+
+
+	<!-- TEST SUPPORT -->
+	<target name="testSetup">
+     <delete dir="${junit.out.dir}" />
+     <mkdir dir="${output.dir}" />
+  	</target>
+	<target name="testCleanup">
+		<if>
+			<equals arg1="${mxunit.error}" arg2="true" />
+				<then>
+					<fail message="Mxunit Had one ore more errors" />
+				</then>
+			<elseif>
+			<equals arg1="${mxunit.fail}" arg2="true" />
+				<then>
+					<fail message="Mxunit Had one ore more failures" />
+				</then>
+			</elseif>
+		</if>
+  	</target>
+
+	<!--- TEST SUITES -->
+	<target name="runFullTestSuite" depends="testSetup">
+	   <mxunittask server="${host}" verbose="false" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+		 <!-- general component test cases -->
+         <testcase name="wcs.unittests.components.ExcelReader_tests" packageName="wcs.unittests.components.ExcelReader_tests" />
+
+		 <!-- dataset component test cases -->
+         <testcase name="wcs.unittests.components.retransmit_tests" packageName="wcs.unittests.components.retransmit_tests" />
+         <testcase name="wcs.unittests.components.transmit_tests" packageName="wcs.unittests.components.transmit_tests" />
+
+		 <!-- continaer component test cases -->
+         <testcase name="wcs.unittests.components.codecontainer_tests" packageName="wcs.unittests.components.codecontainer_tests" />
+
+		<!-- converter invocation tests -->
+         <testcase name="wcs.unittests.components.converters.containers.invoke_tests" packageName="wcs.unittests.components.converters.container.invoke_tests" />
+         <testcase name="wcs.unittests.components.converters.dataset.invoke_tests" packageName="wcs.unittests.components.converters.dataset.invoke_tests" />
+         <testcase name="wcs.unittests.components.converters.charter.invoke_tests" packageName="wcs.unittests.components.converters.charter.invoke_tests" />
+         <testcase name="wcs.unittests.components.converters.dock.invoke_tests" packageName="wcs.unittests.components.converters.dock.invoke_tests" />
+
+		<!-- vor conveters -->
+         <testcase name="wcs.unittests.components.converters.convert_american_steamship_tests" packageName="wcs.unittests.components.converters.convert_american_steamship_tests" />
+         <testcase name="wcs.unittests.components.converters.convert_andrie_tests" packageName="wcs.unittests.components.converters.convert_andrie_tests" />
+		 
+
+		 <!-- charter converters -->
+         <testcase name="wcs.unittests.components.converters.charter.convert_charter_base_tests" packageName="wcs.unittests.components.converters.charter.convert_charter_base_tests" />
+         <testcase name="wcs.unittests.components.converters.charter.convert_marquette_excel_tests" packageName="wcs.unittests.components.converters.charter.marquette_excel_tests" />
+         <testcase name="wcs.unittests.components.converters.charter.convert_mcdonough_on_charter_excel_tests" packageName="wcs.unittests.components.converters.charter.convert_mcdonough_on_charter_excel_tests" />
+
+		<!-- container converters -->
+         <testcase name="wcs.unittests.components.converters.containers.convert_comma_delimited_tests" packageName="wcs.unittests.components.converters.container.convert_comma_delimited_tests" />
+         <testcase name="wcs.unittests.components.converters.containers.convert_container_base_tests" packageName="wcs.unittests.components.converters.container.convert_container_base_tests" />
+         <testcase name="wcs.unittests.components.converters.containers.convert_fixedwidth_tests" packageName="wcs.unittests.components.converters.container.convert_fixedwidth_tests" />
+	   </mxunittask>
+	</target>
+
+
+	<target name="ComponentTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="false" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.ExcelReader_tests" packageName="wcs.unittests.components.ExcelReader_tests" />
+ 	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+
+	<target name="DatasetComponentTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="false" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.retransmit_tests" packageName="wcs.unittests.components.retransmit_tests" />
+         <testcase name="wcs.unittests.components.transmit_tests" packageName="wcs.unittests.components.transmit_tests" />
+ 	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+
+	<target name="ContainerComponentTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="false" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.codecontainer_tests" packageName="wcs.unittests.components.codecontainer_tests" />
+ 	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+
+	<target name="VorConverterTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.converters.convert_american_steamship_tests" packageName="wcs.unittests.components.converters.convert_american_steamship_tests" />
+         <testcase name="wcs.unittests.components.converters.convert_andrie_tests" packageName="wcs.unittests.components.converters.convert_andrie_tests" />
+	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+		
+	<target name="CharterConverterTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.converters.charter.convert_charter_base_tests" packageName="wcs.unittests.components.converters.charter.convert_charter_base_tests" />
+         <testcase name="wcs.unittests.components.converters.charter.convert_marquette_excel_tests" packageName="wcs.unittests.components.converters.charter.marquette_excel_tests" />
+         <testcase name="wcs.unittests.components.converters.charter.convert_mcdonough_on_charter_excel_tests" packageName="wcs.unittests.components.converters.charter.convert_mcdonough_on_charter_excel_tests" />
+	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+	
+	<target name="ContainerConverterTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.converters.containers.convert_comma_delimited_tests" packageName="wcs.unittests.components.converters.container.convert_comma_delimited_tests" />
+         <testcase name="wcs.unittests.components.converters.containers.convert_container_base_tests" packageName="wcs.unittests.components.converters.container.convert_container_base_tests" />
+         <testcase name="wcs.unittests.components.converters.containers.convert_fixedwidth_tests" packageName="wcs.unittests.components.converters.container.convert_fixedwidth_tests" />
+	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+
+
+	<target name="ConverterInvocationTests" depends="testSetup">
+	   <mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+         <testcase name="wcs.unittests.components.converters.containers.invoke_tests" packageName="wcs.unittests.components.converters.container.invoke_tests" />
+         <testcase name="wcs.unittests.components.converters.dataset.invoke_tests" packageName="wcs.unittests.components.converters.dataset.invoke_tests" />
+         <testcase name="wcs.unittests.components.converters.charter.invoke_tests" packageName="wcs.unittests.components.converters.charter.invoke_tests" />
+         <testcase name="wcs.unittests.components.converters.dock.invoke_tests" packageName="wcs.unittests.components.converters.dock.invoke_tests" />
+	   </mxunittask>
+		<antcall target="displayResultsIfProblems" />
+	</target>
+
+
+
+	<!-- UNIT TEST RESULT REPORTING -->
+	<target name="junitreport" description="Create a report for the test result">
+     <mkdir dir="${junit.out.dir.html}"/>
+     <junitreport todir="${junit.out.dir.html}">
+        <fileset dir="${output.dir}">
+           <include name="*.xml"/>
+         </fileset>
+         <report format="frames" todir="${junit.out.dir.html}" styledir="${style.dir}"/>
+      </junitreport>
+	</target>
+
+
+	<target name="displayTestResults" depends="junitreport">
+			<exec executable="C:\Program Files\Internet Explorer\iexplore.exe">
+			  <arg value="${junit.out.dir.html}/index.html"/>
+			</exec>
+	</target>
+
+	<target name="displayResultsIfProblems">
+		<if>
+			<equals arg1="${alltests.showResults}" arg2="true" />
+				<then>
+					<if>
+						<equals arg1="${mxunit.error}" arg2="true" />
+							<then>
+								<antcall target="displayTestResults" />
+							</then>
+						<elseif>
+						<equals arg1="${mxunit.fail}" arg2="true" />
+							<then>
+								<antcall target="displayTestResults" />
+							</then>
+						</elseif>
+					</if>
+				</then>
+		</if>
+	</target>
+
+
+	<target name="setupAllUITests" depends="createUITestLogginDirectory">
+		<!--
+			this will setup all stuff needed for every test in the test suite..  It could be pretty intensive
+		-->
+		<mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+		 <testcase name="wcs.uitests.seleniumMxSetup" packageName="wcs.uitests.seleniumMxSetup" />
+		</mxunittask>
+	</target>
+
+	<!-- UI TESTS -->
+	<target name="AllUITests" depends="setupAllUITests">
+		<!-- copies the entire test directory tree over to selenium; we dont need one for each subdirectory -->
+		<copy	todir="${uitests.testdir}" overwrite="true" flatten="false" granularity="1">
+				<fileset dir="${uitests.srcdir}" />
+		</copy>
+
+		<selenese 
+			suite="${uitests.srcdir}/MasterSuite.html"
+			browser="${uitests.browser}"
+			results="${uitests.resultsdir}uiTestResults.html"
+			multiWindow="false"
+			timeoutInSeconds="980"
+			startURL="http://${uitests.server}" />
+
+		<antcall target="fixUITestReportHtml" />
+
+		<antcall target="tearDownAllUITests" />
+
+	</target>
+
+	<target name="tearDownAllUITests">
+		<!--
+			this will teardown all stuff needed for every test in the test suite..  It could be pretty intensive
+		-->
+		<mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+		 <testcase name="wcs.uitests.seleniumMxTeardown" packageName="wcs.uitests.seleniumMxTeardown" />
+		</mxunittask>
+	</target>
+
+	<target name="generalUITests" depends="deleteUITests, createUITestLogginDirectory">
+		<copy	todir="${uitests.testdir}">
+				<fileset dir="${uitests.srcdir}general" />
+		</copy>
+
+		<selenese 
+			suite="${uitests.srcdir}general/GeneralSuite.html"
+			browser="${uitests.browser}"
+			results="${uitests.resultsdir}general.html"
+			multiWindow="false"
+			timeoutInSeconds="180"
+			startURL="http://${uitests.server}" />
+
+		<antcall target="tryDeleteUITestsArtifacts" />
+	</target>
+
+	<target name="reportsUITests" depends="deleteUITests, createUITestLogginDirectory">
+		<copy	todir="${uitests.testdir}">
+				<fileset dir="${uitests.srcdir}Reports" />
+		</copy>
+
+		<selenese 
+			suite="${uitests.srcdir}Reports/ReportsSuite.html"
+			browser="${uitests.browser}"
+			results="${uitests.resultsdir}reports.html"
+			multiWindow="false"
+			timeoutInSeconds="180"
+			startURL="http://${uitests.server}" />
+
+		<antcall target="tryDeleteUITestsArtifacts" />
+
+	</target>
+
+	<target name="charterUITests" depends="deleteUITests, createUITestLogginDirectory">
+		<copy	todir="${uitests.testdir}">
+				<fileset dir="${uitests.srcdir}charter" />
+		</copy>
+
+		<!--
+			this will setup all stuff needed for every test in the charter test suite..  It could be pretty intensive
+		-->
+		<mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+		 <testcase name="wcs.uitests.charter.setup" packageName="wcs.uitests.charter.setup" />
+		</mxunittask>
+
+
+		<selenese 
+			suite="${uitests.srcdir}charter/CharterSuite.html"
+			browser="${uitests.browser}"
+			results="${uitests.resultsdir}charter.html"
+			multiWindow="false"
+			timeoutInSeconds="180"
+			startURL="http://${uitests.server}" />
+
+		<!--
+			this will teardown all stuff needed for every test in the charter test suite..  It could be pretty intensive
+		-->
+		<mxunittask server="${host}" verbose="true" outputdir="${output.dir}" errorproperty="mxunit.error" failureproperty="mxunit.fail">
+		 <testcase name="wcs.uitests.charter.teardown" packageName="wcs.uitests.charter.teardown" />
+		</mxunittask>
+
+		<antcall target="tryDeleteUITestsArtifacts" />
+	</target>
+
+
+	<target name="tryDeleteUITestsArtifacts">
+		<antcall target="deleteUITests" />
+		<if>
+			<equals arg1="${alltests.showResults}" arg2="true" />
+				<then>
+					<antcall target="displayUITestResults" />
+				</then>
+		</if>
+	</target>
+
+
+	<target name="createUITestLogginDirectory">
+			<mkdir dir="${uitests.resultsdir}" />
+	</target>
+
+	<target name="deleteUITests">
+		<delete dir="${uitests.testdir}" />
+		<mkdir dir="${uitests.testdir}" />
+	</target>
+
+	<target name="fixUITestReportHtml">
+		<replace file="${uitests.resultsdir}uiTestResults.html" token="&lt;html&gt;" value="" />
+
+		<concat destfile="${uitests.resultsdir}selenium-results.html">
+			<fileset file="${basedir}/uitests/html_header.txt" />
+			<fileset file="${uitests.resultsdir}uiTestResults.html" />
+		</concat>
+
+		<delete file="${uitests.resultsdir}uiTestResults.html" />
+	</target>
+
+	<target name="displayUITestResults">
+		<if>
+			<equals arg1="${alltests.showResults}" arg2="true" />
+				<then>
+					<concat destfile="${uitests.resultsdir}selenium-results.html">
+						<fileset file="${uitests.resultsdir}general.html" />
+						<fileset file="${uitests.resultsdir}reports.html" />
+						<fileset file="${uitests.resultsdir}charter.html" />
+					</concat>
+					<exec executable="C:\Program Files\Internet Explorer\iexplore.exe">
+					  <arg value="${uitests.resultsdir}selenium-results.html"/>
+					</exec>
+				</then>
+		</if>
+	</target>
+
+</project>

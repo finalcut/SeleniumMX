@@ -1,0 +1,6 @@
+<project name="user_specific_build_file">
+	<property name="host" value="localhost" />
+	<property name="uitests.testdir" value="c:\dev\tools\selenium-server\tests" />
+	<property name="uitests.server" value="${host}" />
+	<property name="uitests.browser" value="*custom C:\Documents and Settings\---USERNAME---\Local Settings\Application Data\Google\Chrome\Application\chrome.exe" />
+</project>
